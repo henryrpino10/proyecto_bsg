@@ -30,9 +30,10 @@ make setup
 # Activar entorno virtual
 source venv/bin/activate
 
-# Inicializar Hive (primera vez)
+# Inicializar Hive
 python scripts/run_etl.py --init-hive
-📦 Estructura del Proyecto
+
+Estructura del Proyecto
 yolo-detection-pipeline/
 ├── classification_system/     # Sistema de clasificación YOLO
 │   ├── detector.py           # Detección con YOLO
@@ -51,7 +52,7 @@ yolo-detection-pipeline/
 ├── scripts/                  # Scripts de ejecución
 ├── tests/                    # Tests unitarios
 └── data/                     # Datos (input, staging, logs)
-🎯 Uso
+Uso
 1. Sistema de Clasificación
 Procesar un Video
 bash# Procesar video específico
@@ -82,15 +83,10 @@ Modo Daemon (Ejecución Continua)
 bash# Ejecutar ETL en modo daemon
 python scripts/run_etl.py --daemon
 
-# El sistema verificará automáticamente:
-# - Videos: cada 5 minutos (configurable)
-# - Imágenes: cuando se complete un lote de 100 (configurable)
-Gestión de Estado
-bash# Ver estadísticas
-python scripts/run_etl.py --stats
 
-# Resetear estado (cuidado!)
+# Resetear estado
 python scripts/run_etl.py --reset-state
 Usar Makefile
 bash# Ejecutar ETL
+
 make run-etl
