@@ -1,0 +1,27 @@
+# Deep Learning y Visión por Computadora
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# Procesamiento de Datos
+numpy>=1.24.0
+pandas>=2.0.0
+pyarrow>=12.0.0
+
+# Conexión a Hive
+pyhive>=0.7.0
+thrift>=0.16.0
+sasl>=0.3.1
+thrift-sasl>=0.4.3
+
+# Configuración y Logging
+pyyaml>=6.0
+python-dotenv>=1.0.0
+loguru>=0.7.0
+
+# Utilidades
+tqdm>=4.65.0
+psutil>=5.9.0
+hashlib3>=2.0.0

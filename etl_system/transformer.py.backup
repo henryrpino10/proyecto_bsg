@@ -1,0 +1,334 @@
+"""
+Módulo de transformación: Limpia, valida y transforma datos.
+"""
+
+import pandas as pd
+import numpy as np
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+from loguru import logger
+
+
+class DataTransformer:
+    """Transforma y limpia datos de detecciones."""
+
+    # Esquema esperado de columnas
+    REQUIRED_COLUMNS = {
+        "detection_id",
+        "class_name",
+        "confidence",
+        "bbox_x1",
+        "bbox_y1",
+        "bbox_x2",
+        "bbox_y2",
+    }
+
+    NUMERIC_COLUMNS = [
+        "confidence",
+        "bbox_x1",
+        "bbox_y1",
+        "bbox_x2",
+        "bbox_y2",
+        "bbox_width",
+        "bbox_height",
+        "bbox_area",
+        "center_x",
+        "center_y",
+        "aspect_ratio",
+        "relative_area",
+        "normalized_x1",
+        "normalized_y1",
+        "normalized_x2",
+        "normalized_y2",
+    ]
+
+    def __init__(self, min_confidence: float = 0.25, remove_duplicates: bool = True):
+        """
+        Inicializa el transformador.
+
+        Args:
+            min_confidence: Confianza mínima para filtrar detecciones
+            remove_duplicates: Si True, elimina duplicados
+        """
+        self.min_confidence = min_confidence
+        self.remove_duplicates = remove_duplicates
+        logger.info(f"Transformer inicializado - Min confidence: {min_confidence}")
+
+    def validate_schema(self, df: pd.DataFrame) -> bool:
+        """
+        Valida que el DataFrame tenga las columnas requeridas.
+
+        Args:
+            df: DataFrame a validar
+
+        Returns:
+            True si el esquema es válido
+        """
+        missing_columns = self.REQUIRED_COLUMNS - set(df.columns)
+
+        if missing_columns:
+            logger.error(f"Columnas faltantes: {missing_columns}")
+            return False
+
+        logger.debug("Esquema validado correctamente")
+        return True
+
+    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Limpia el DataFrame eliminando valores nulos e inválidos.
+
+        Args:
+            df: DataFrame a limpiar
+
+        Returns:
+            DataFrame limpio
+        """
+        initial_count = len(df)
+
+        # Eliminar filas con valores nulos en columnas críticas
+        critical_cols = ["detection_id", "class_name", "confidence"]
+        df_clean = df.dropna(subset=critical_cols)
+
+        # Eliminar duplicados si está habilitado
+        if self.remove_duplicates:
+            df_clean = df_clean.drop_duplicates(subset=["detection_id"])
+
+        # Filtrar por confianza mínima
+        df_clean = df_clean[df_clean["confidence"] >= self.min_confidence]
+
+        # Filtrar bounding boxes inválidos
+        df_clean = df_clean[
+            (df_clean["bbox_x2"] > df_clean["bbox_x1"])
+            & (df_clean["bbox_y2"] > df_clean["bbox_y1"])
+        ]
+
+        removed_count = initial_count - len(df_clean)
+        logger.info(
+            f"Limpieza completada: {len(df_clean)} filas válidas "
+            f"({removed_count} eliminadas)"
+        )
+
+        return df_clean
+
+    def normalize_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Normaliza tipos de datos y formatos.
+
+        Args:
+            df: DataFrame a normalizar
+
+        Returns:
+            DataFrame normalizado
+        """
+        df_norm = df.copy()
+
+        # Convertir columnas numéricas
+        for col in self.NUMERIC_COLUMNS:
+            if col in df_norm.columns:
+                df_norm[col] = pd.to_numeric(df_norm[col], errors="coerce")
+
+        # Convertir timestamps
+        timestamp_cols = ["timestamp", "frame_timestamp", "_extracted_at"]
+        for col in timestamp_cols:
+            if col in df_norm.columns:
+                df_norm[col] = pd.to_datetime(df_norm[col], errors="coerce")
+
+        # Normalizar nombres de clases (lowercase, strip)
+        if "class_name" in df_norm.columns:
+            df_norm["class_name"] = df_norm["class_name"].str.lower().str.strip()
+
+        # Convertir source_type a categoría
+        if "source_type" in df_norm.columns:
+            df_norm["source_type"] = df_norm["source_type"].astype("category")
+
+        logger.debug("Normalización completada")
+        return df_norm
+
+    def add_derived_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Añade características derivadas útiles para análisis.
+
+        Args:
+            df: DataFrame original
+
+        Returns:
+            DataFrame con características adicionales
+        """
+        df_enhanced = df.copy()
+
+        # Calcular área si no existe
+        if "bbox_area" not in df_enhanced.columns:
+            df_enhanced["bbox_area"] = (
+                df_enhanced["bbox_width"] * df_enhanced["bbox_height"]
+            )
+
+        # Añadir categoría de tamaño de objeto
+        if "bbox_area" in df_enhanced.columns:
+            df_enhanced["size_category"] = pd.cut(
+                df_enhanced["bbox_area"],
+                bins=[0, 1000, 10000, 50000, float("inf")],
+                labels=["tiny", "small", "medium", "large"],
+            )
+
+        # Añadir categoría de confianza
+        df_enhanced["confidence_category"] = pd.cut(
+            df_enhanced["confidence"],
+            bins=[0, 0.5, 0.7, 0.9, 1.0],
+            labels=["low", "medium", "high", "very_high"],
+        )
+
+        # Añadir posición relativa en imagen
+        if all(col in df_enhanced.columns for col in ["center_x", "image_width"]):
+            df_enhanced["horizontal_position"] = pd.cut(
+                df_enhanced["center_x"] / df_enhanced["image_width"],
+                bins=[0, 0.33, 0.67, 1.0],
+                labels=["left", "center", "right"],
+            )
+
+        if all(col in df_enhanced.columns for col in ["center_y", "image_height"]):
+            df_enhanced["vertical_position"] = pd.cut(
+                df_enhanced["center_y"] / df_enhanced["image_height"],
+                bins=[0, 0.33, 0.67, 1.0],
+                labels=["top", "middle", "bottom"],
+            )
+
+        # Añadir timestamp de procesamiento
+        df_enhanced["_processed_at"] = datetime.now()
+
+        logger.info("Características derivadas añadidas")
+        return df_enhanced
+
+    def aggregate_video_detections(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Agrega estadísticas para detecciones de video.
+
+        Args:
+            df: DataFrame con detecciones de video
+
+        Returns:
+            DataFrame con agregaciones
+        """
+        if "frame_number" not in df.columns:
+            logger.warning("No es un DataFrame de video, saltando agregación")
+            return df
+
+        # Agregar por objeto y frame
+        agg_dict = {
+            "confidence": ["mean", "max", "min"],
+            "bbox_area": ["mean", "std"],
+            "detection_id": "count",
+        }
+
+        aggregated = (
+            df.groupby(["source_file", "class_name", "frame_number"])
+            .agg(agg_dict)
+            .reset_index()
+        )
+
+        aggregated.columns = ["_".join(col).strip("_") for col in aggregated.columns]
+
+        logger.info(f"Agregación de video: {len(aggregated)} grupos")
+        return aggregated
+
+    def prepare_for_hive(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Prepara el DataFrame para carga en Hive.
+
+        Args:
+            df: DataFrame a preparar
+
+        Returns:
+            DataFrame optimizado para Hive
+        """
+        df_hive = df.copy()
+
+    # NUEVO: Renombrar columnas que son palabras reservadas en Hive
+        rename_map = { 'timestamp': 'detection_timestamp', 'filename': 'source_filename', '_extracted_at': 
+        'extracted_at', '_processed_at': 'processed_at', '_loaded_at': 'loaded_at', '_source_file': 
+        'source_csv_file'
+        }
+    # Renombrar solo las columnas que existen
+        existing_renames = {k: v for k, v in rename_map.items() if k in df_hive.columns}
+        df_hive = df_hive.rename(columns=existing_renames)
+
+    # Convertir timestamps a string (formato ISO)
+        for col in df_hive.select_dtypes(include=["datetime64"]).columns:
+        df_hive[col] = df_hive[col].astype(str)
+
+
+
+        # Convertir timestamps a string (formato ISO)
+        for col in df_hive.select_dtypes(include=["datetime64"]).columns:
+            df_hive[col] = df_hive[col].astype(str)
+
+        # Reemplazar NaN con None para Hive
+        df_hive = df_hive.replace({np.nan: None})
+
+        # Ordenar por timestamp para particionamiento eficiente
+        if "timestamp" in df_hive.columns:
+            df_hive = df_hive.sort_values("timestamp")
+
+        logger.info("DataFrame preparado para Hive")
+        return df_hive
+
+    def transform_pipeline(
+        self, df: pd.DataFrame, add_features: bool = True
+    ) -> pd.DataFrame:
+        """
+        Pipeline completo de transformación.
+
+        Args:
+            df: DataFrame crudo
+            add_features: Si True, añade características derivadas
+
+        Returns:
+            DataFrame transformado
+        """
+        logger.info(f"Iniciando pipeline de transformación: {len(df)} filas")
+
+        # Validar esquema
+        if not self.validate_schema(df):
+            raise ValueError("Esquema inválido")
+
+        # Limpiar datos
+        df_clean = self.clean_data(df)
+
+        # Normalizar
+        df_norm = self.normalize_data(df_clean)
+
+        # Añadir características derivadas
+        if add_features:
+            df_enhanced = self.add_derived_features(df_norm)
+        else:
+            df_enhanced = df_norm
+
+        # Preparar para Hive
+        df_final = self.prepare_for_hive(df_enhanced)
+
+        logger.info(f"Pipeline completado: {len(df_final)} filas")
+        return df_final
+
+    def get_transformation_stats(self, df_before: pd.DataFrame, df_after: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Genera estadísticas de la transformación.
+
+        Args:
+            df_before: DataFrame antes de transformar
+            df_after: DataFrame después de transformar
+
+        Returns:
+            Diccionario con estadísticas
+        """
+        return {
+            "rows_before": len(df_before),
+            "rows_after": len(df_after),
+            "rows_removed": len(df_before) - len(df_after),
+            "removal_percentage": round(
+                ((len(df_before) - len(df_after)) / len(df_before) * 100), 2
+            )
+            if len(df_before) > 0
+            else 0,
+            "columns_before": len(df_before.columns),
+            "columns_after": len(df_after.columns),
+            "new_columns": list(set(df_after.columns) - set(df_before.columns)),
+        }

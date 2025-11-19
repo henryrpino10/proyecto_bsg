@@ -1,0 +1,33 @@
+# Configuración del Sistema ETL
+
+# Directorios
+staging_dir: "data/staging"       # Directorio de staging con CSVs
+state_file: "data/etl_state.json" # Archivo de estado del ETL
+
+# Transformación
+min_confidence: 0.25     # Filtrar detecciones con confianza menor a este valor
+remove_duplicates: true  # Eliminar duplicados basado en detection_id
+
+# Batch Manager - Reglas de Lotes
+video_time_window: 300   # Ventana de tiempo para videos (segundos) - 5 minutos
+image_batch_size: 100    # Número de imágenes para formar un lote
+
+# Scheduler (modo daemon)
+check_interval: 60  # Intervalo de verificación en segundos
+
+# Configuración de Apache Hive
+hive:
+  host: "128.85.242.8"
+  port: 10000
+  database: "detections_db"
+  username: "hrios0105"
+  table_name: "detections"
+
+# Tabla destino
+table_name: "detections"
+
+# Limpieza de datos antiguos
+retention_days: 30  # Días de datos a conservar en Hive
+
+# Logging
+log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR

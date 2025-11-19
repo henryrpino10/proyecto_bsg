@@ -1,0 +1,29 @@
+# Configuración del Sistema de Clasificación
+
+# Modelo YOLO
+model_path: "yolov8n.pt"  # Opciones: yolov8n.pt, yolov8s.pt, yolov8m.pt, yolov8l.pt, yolov8x.pt
+confidence_threshold: 0.25  # Umbral de confianza (0-1)
+
+# Directorios
+staging_dir: "data/staging"  # Directorio para archivos CSV de salida
+input_dir: "data/input"      # Directorio de entrada
+
+# Procesamiento de Videos
+frame_skip: 60          # Procesar 1 de cada N frames (1 = todos los frames)
+max_frames: null       # Máximo de frames a procesar (null = todos)
+
+# Procesamiento de Imágenes
+recursive_images: false  # Buscar imágenes en subdirectorios
+
+# CSV Writer
+buffer_size: 100  # Número de detecciones antes de escribir a disco
+
+# Archivos de entrada (opcional, si no se pasan por línea de comandos)
+input_videos:
+  # - "data/input/video1.mp4"
+  # - "data/input/video2.mp4"
+
+input_images_dir: null  # "data/input/images"
+
+# Logging
+log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
