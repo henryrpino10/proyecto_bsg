@@ -47,7 +47,9 @@ cd proyecto_bsg
 **En Linux/WSL:**
 ```bash
 make setup
-source venv/bin/activate
+source venv/bin/actívate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 **En Windows (PowerShell):**
