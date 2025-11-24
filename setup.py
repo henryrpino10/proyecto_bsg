@@ -24,7 +24,7 @@ setup(
     description="Pipeline end-to-end para detección de objetos con YOLO y ETL a Hive",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/tu-usuario/yolo-detection-pipeline",
+    url="https://github.com/henryrpino10/proyecto_bsg",
     packages=find_packages(exclude=["tests", "tests.*"]),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -54,3 +54,4 @@ setup(
     },
 
 )
+
