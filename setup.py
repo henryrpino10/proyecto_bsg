@@ -19,8 +19,8 @@ dev_requirements = [r.strip() for r in dev_requirements if r.strip() and not r.s
 setup(
     name="yolo-detection-pipeline",
     version="1.0.0",
-    author="Tu Nombre",
-    author_email="tu@email.com",
+    author="henry Rios",
+    author_email="henry.rpino@gmail.com",
     description="Pipeline end-to-end para detección de objetos con YOLO y ETL a Hive",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -52,4 +52,5 @@ setup(
     package_data={
         "": ["*.yaml", "*.yml"],
     },
+
 )
