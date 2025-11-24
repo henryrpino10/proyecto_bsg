@@ -19,7 +19,7 @@ python scripts/run_etl.py --init-hive
 
 
 Uso
-1. Sistema de Clasificación
+Sistema de Clasificación
 Procesar un Video
 bash# Procesar video específico
 
@@ -33,7 +33,7 @@ python scripts/run_classification.py --images data/input/images/
 bash# Ejecutar sistema de clasificación
 make run-classification
 
-2. Sistema ETL
+Sistema ETL
 Ejecución Única
 bash# Procesar todos los archivos pendientes
 python scripts/run_etl.py
@@ -47,6 +47,7 @@ python scripts/run_etl.py --source-type image
 
 # Resetear estado
 python scripts/run_etl.py --reset-state
+
 
 
 
