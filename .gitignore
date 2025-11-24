@@ -42,7 +42,12 @@ htmlcov/
 *.log
 data/logs/
 
-
+# Data files
+data/input/*
+!data/input/.gitkeep
+data/staging/*
+!data/staging/.gitkeep
+data/etl_state.json
 
 # YOLO models
 *.pt
