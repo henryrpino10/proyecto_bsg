@@ -1,21 +1,5 @@
-🏗️ Arquitectura
-┌─────────────────────────────────────────────────────────────────┐
-│                    SISTEMA DE CLASIFICACIÓN                      │
-├─────────────────────────────────────────────────────────────────┤
-│  Videos/Imágenes → YOLO → Detecciones → CSV (Staging)          │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                       SISTEMA ETL                                │
-├─────────────────────────────────────────────────────────────────┤
-│  CSV → Extract → Transform → Load → Apache Hive                 │
-│  (Batch Manager controla flujo por reglas de tiempo/tamaño)     │
-└─────────────────────────────────────────────────────────────────┘
-🚀 Instalación
-Requisitos Previos
 
-Python 3.8+
+Python 3.11+
 Apache Hive (con HiveServer2)
 CUDA (opcional, para GPU)
 
@@ -52,23 +36,22 @@ yolo-detection-pipeline/
 ├── scripts/                  # Scripts de ejecución
 ├── tests/                    # Tests unitarios
 └── data/                     # Datos (input, staging, logs)
+
 Uso
 1. Sistema de Clasificación
 Procesar un Video
 bash# Procesar video específico
+
 python scripts/run_classification.py --video data/input/video.mp4
 
-# Con configuración personalizada
-python scripts/run_classification.py --video video.mp4 --config config/custom.yaml
 Procesar Imágenes
 bash# Procesar directorio de imágenes
+
 python scripts/run_classification.py --images data/input/images/
 
-# Buscar imágenes recursivamente
-python scripts/run_classification.py --images data/input/ --recursive
-Usar Makefile
 bash# Ejecutar sistema de clasificación
 make run-classification
+
 2. Sistema ETL
 Ejecución Única
 bash# Procesar todos los archivos pendientes
@@ -79,14 +62,9 @@ python scripts/run_etl.py --source-type video
 
 # Procesar solo imágenes
 python scripts/run_etl.py --source-type image
-Modo Daemon (Ejecución Continua)
-bash# Ejecutar ETL en modo daemon
-python scripts/run_etl.py --daemon
 
 
 # Resetear estado
 python scripts/run_etl.py --reset-state
-Usar Makefile
-bash# Ejecutar ETL
 
-make run-etl
+
