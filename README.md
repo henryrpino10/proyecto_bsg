@@ -17,25 +17,6 @@ source venv/bin/activate
 # Inicializar Hive
 python scripts/run_etl.py --init-hive
 
-Estructura del Proyecto
-yolo-detection-pipeline/
-├── classification_system/     # Sistema de clasificación YOLO
-│   ├── detector.py           # Detección con YOLO
-│   ├── video_processor.py    # Procesamiento de videos
-│   ├── image_processor.py    # Procesamiento de imágenes
-│   └── csv_writer.py         # Escritura a CSV
-│
-├── etl_system/               # Sistema ETL
-│   ├── extractor.py          # Extracción de CSVs
-│   ├── transformer.py        # Transformación y limpieza
-│   ├── loader.py             # Carga a Hive
-│   ├── deduplicator.py       # Deduplicación
-│   └── batch_manager.py      # Gestión de lotes
-│
-├── config/                   # Archivos de configuración
-├── scripts/                  # Scripts de ejecución
-├── tests/                    # Tests unitarios
-└── data/                     # Datos (input, staging, logs)
 
 Uso
 1. Sistema de Clasificación
@@ -66,5 +47,6 @@ python scripts/run_etl.py --source-type image
 
 # Resetear estado
 python scripts/run_etl.py --reset-state
+
 
 
