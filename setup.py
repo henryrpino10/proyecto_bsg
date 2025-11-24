@@ -10,10 +10,10 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 # Leer requirements
-requirements = (this_directory / "requirements.txt").read_text().splitlines()
+requirements = (this_directory / "requirements.txt").read_text(encoding="utf-8").splitlines()
 requirements = [r.strip() for r in requirements if r.strip() and not r.startswith("#")]
 
-dev_requirements = (this_directory / "requirements-dev.txt").read_text().splitlines()
+dev_requirements = (this_directory / "requirements-dev.txt").read_text(encoding="utf-8").splitlines()
 dev_requirements = [r.strip() for r in dev_requirements if r.strip() and not r.startswith("#")]
 
 setup(
